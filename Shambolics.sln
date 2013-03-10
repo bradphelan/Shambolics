@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Shambolics", "Shambolics\Shambolics.fsproj", "{3D61C10B-CF1F-4441-BCBA-22DC43BB2732}"
+EndProject
+Project("{4925A630-B079-445d-BCD4-3A9C94FE9307}") = "Shambolics.Spec", "Shambolics.Spec\Shambolics.Spec.fsproj", "{3F69F1BE-1F43-4CE4-BBD8-A86331EDDD33}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3D61C10B-CF1F-4441-BCBA-22DC43BB2732}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3D61C10B-CF1F-4441-BCBA-22DC43BB2732}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3D61C10B-CF1F-4441-BCBA-22DC43BB2732}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3D61C10B-CF1F-4441-BCBA-22DC43BB2732}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3F69F1BE-1F43-4CE4-BBD8-A86331EDDD33}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3F69F1BE-1F43-4CE4-BBD8-A86331EDDD33}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3F69F1BE-1F43-4CE4-BBD8-A86331EDDD33}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3F69F1BE-1F43-4CE4-BBD8-A86331EDDD33}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = Shambolics\Shambolics.fsproj
+	EndGlobalSection
+EndGlobal
