@@ -1,9 +1,9 @@
 Shambolics
 ===========
 
-By: Brad Phelan
-Language: F#
-License : MIT
+- By: Brad Phelan
+- Language: F#
+- License : MIT
 
 Synopsis
 ========
