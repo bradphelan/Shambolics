@@ -41,8 +41,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
-    <Compile Include="Symbolics.fs" />
-    <Compile Include="Print.fs" />
+    <Compile Include="Symbolics.fs">
+      <DependentUpon>packages.config</DependentUpon>
+    </Compile>
+    <Compile Include="Print.fs">
+      <DependentUpon>Symbolics.fs</DependentUpon>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
