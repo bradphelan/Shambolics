@@ -10,7 +10,6 @@ open Microsoft.FSharp.Quotations
 open FSharpx.Linq.QuotationEvaluation
 open Microsoft.FSharp.Linq.RuntimeHelpers
 
-
 module Calculus =
         
     let (|UnaryFn|_|) fn = 
@@ -28,33 +27,27 @@ module Calculus =
         | BinaryFn <@ (*) @> (l,r) -> Some(l,r)
         | _ -> None 
         
-    let (|Same|_|) = 
-        function
+    let (|Same|_|) = function
         | (r,l) when r = l -> Some(l)
         | _ -> None
         
-    let (|Sin|_|) = 
-        function
+    let (|Sin|_|) = function
         | UnaryFn <@ Math.Sin @> arg -> Some(arg)
         | _ -> None
         
-    let (|Cos|_|) = 
-        function
+    let (|Cos|_|) = function
         | UnaryFn <@ Math.Cos @> arg -> Some(arg)
         | _ -> None
         
-    let (|Add|_|) =
-        function
+    let (|Add|_|) = function
         | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
         | _ -> None 
         
-    let (|Divide|_|) =
-        function
+    let (|Divide|_|) = function
         | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
         | _ -> None 
         
     let rec simplify quotation =
-    
             
         let (|ConstantMultiply|_|) =
             function
@@ -87,9 +80,6 @@ module Calculus =
                 
             | _ -> None
     
-        
-        Console.WriteLine(quotation)
-        
         match quotation with
         
         | CommonFactor e -> e
@@ -130,21 +120,15 @@ module Calculus =
         | Multiply (a,b)                 -> 
             let sa = simplify a
             let sb = simplify b
-            Console.WriteLine("--")
-            Console.WriteLine(sa)
-            Console.WriteLine(sb)
             let e = <@@ (%%sa:double) * %%sb @@>
             if sa = a && sb = b then
                 e
             else
                 simplify e
             
-            
         | ExprShape.ShapeVar v                  -> Expr.Var v
         | ExprShape.ShapeLambda (v,expr)        -> Expr.Lambda (v, simplify expr)
         | ExprShape.ShapeCombination (o, exprs) -> ExprShape.RebuildShapeCombination (o,List.map simplify exprs)
-        
-        
     
     let rec der_impl param quotation : Expr =
    
@@ -170,7 +154,7 @@ module Calculus =
         | ExprShape.ShapeVar v -> 
             match v with 
             | X -> Expr.Value 1.0
-            | _ -> Expr.Var v
+            | _ -> Expr.Value 0.0
             
         | ExprShape.ShapeLambda (v,expr) -> Expr.Lambda (v,der_impl param expr)
         
