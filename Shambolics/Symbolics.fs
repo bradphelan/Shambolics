@@ -13,37 +13,53 @@ open Microsoft.FSharp.Linq.RuntimeHelpers
 
 module Calculus =
         
+    let (|UnaryFn|_|) fn = 
+        function
+        | SpecificCall fn (_,_,arg::[]) -> Some(arg)
+        | _ -> None
+        
+    let (|BinaryFn|_|) fn  = 
+        function
+        | SpecificCall fn (_,_,l::r::[]) -> Some(l,r)
+        | _ -> None
+        
+    let (|Multiply|_|)  = 
+        function
+        | BinaryFn <@ (*) @> (l,r) -> Some(l,r)
+        | _ -> None 
+        
+        
     let rec simplify quotation =
     
-        let (|Same|_|) x =
-            match x with
-            | (r,l) when r = l -> Some(Same(l))
+        let (|Same|_|) = 
+            function
+            | (r,l) when r = l -> Some(l)
             | _ -> None
             
-        let (|Multiply|_|) x =
-            match x with    
-            | SpecificCall <@ (*) @> (_,_,l::r::[]) -> Some(Multiply(l,r))
-            | _ -> None 
-            
-        let (|Add|_|) x =
-            match x with    
-            | SpecificCall <@ (+) @> (_,_,l::r::[]) -> Some(Add(l,r))
-            | _ -> None 
-            
-        let (|Divide|_|) x =
-            match x with    
-            | SpecificCall <@ (+) @> (_,_,l::r::[]) -> Some(Divide(l,r))
-            | _ -> None 
-            
-        let (|ConstantMultiply|_|) x =
-            match x with
-            | Multiply( Double v, r) -> Some(ConstantMultiply(v,r))
-            | Multiply( l, Double v) -> Some(ConstantMultiply(v,l))    
+        let (|Sin|_|) = 
+            function
+            | UnaryFn <@ Math.Sin @> arg -> Some(arg)
             | _ -> None
             
-        let (|MultiplyAdd|_|) x =
-            match x with    
-            | Add ( Multiply (ll,lr), Multiply(rl, rr)) -> Some( MultiplyAdd( (ll,lr,rl,rr)))
+        let (|Add|_|) =
+            function
+            | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
+            | _ -> None 
+            
+        let (|Divide|_|) =
+            function
+            | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
+            | _ -> None 
+            
+        let (|ConstantMultiply|_|) =
+            function
+            | Multiply( Double v, r) -> Some(v,r)
+            | Multiply( l, Double v) -> Some(v,l)    
+            | _ -> None
+            
+        let (|MultiplyAdd|_|) =
+            function
+            | Add ( Multiply (ll,lr), Multiply(rl, rr)) -> Some( ll,lr,rl,rr)
             | _ -> None    
             
         let Multiply3(a,b,c) = 
@@ -53,16 +69,16 @@ module Calculus =
         let (|CommonFactor|_|) x =
             match x with
             | MultiplyAdd(al,ar,bl,br) when al = bl ->
-                Some(CommonFactor(Multiply3(al,ar,br)))
+                Some(Multiply3(al,ar,br))
                 
             | MultiplyAdd (al,ar,bl,br) when al = br ->
-                Some(CommonFactor(Multiply3(al,ar,bl)))
+                Some(Multiply3(al,ar,bl))
                 
             | MultiplyAdd(al,ar,bl,br) when ar = bl ->
-                Some(CommonFactor(Multiply3(ar,al,br)))
+                Some(Multiply3(ar,al,br))
                 
             | MultiplyAdd(al,ar,bl,br) when ar = br ->
-                Some(CommonFactor(Multiply3(ar,al,bl)))
+                Some(Multiply3(ar,al,bl))
                 
             | _ -> None
     
@@ -123,26 +139,28 @@ module Calculus =
         | ExprShape.ShapeLambda (v,expr)        -> Expr.Lambda (v, simplify expr)
         | ExprShape.ShapeCombination (o, exprs) -> ExprShape.RebuildShapeCombination (o,List.map simplify exprs)
     
-    let rec der_impl param quotation =
+    let rec der_impl param quotation : Expr =
    
         let (|X|_|) input = if input = param then Some(X) else None
+        
+               
          
         match quotation with
         
-        | SpecificCall <@ (*) @> (_,types,l::r::[]) -> 
+        | BinaryFn <@ (*) @> (l,r) -> 
             let dl = der_impl param l
             let dr = der_impl param r
             <@@ (%%dl:double) * (%%r:double) + (%%l:double) * (%%dr:double) @@>
             
-        | SpecificCall <@ Math.Sin @> (_,_types, arg::_) ->
+        | UnaryFn <@ Math.Sin @> (arg) ->
             let di = der_impl param arg
             <@@ (%%di:double) * Math.Cos( (%%arg:double) ) @@> 
 
-        | SpecificCall <@ Math.Cos @> (_,_types, arg::_) ->
+        | UnaryFn <@ Math.Cos @> (arg) ->
             let di = der_impl param arg
             <@@ - (%%di:double) * Math.Sin( (%%arg:double) ) @@> 
             
-         | Double _ -> Expr.Value 0.0
+        | Double _ -> Expr.Value 0.0
             
         | ExprShape.ShapeVar v -> 
             match v with 
