@@ -28,28 +28,33 @@ module Calculus =
         | BinaryFn <@ (*) @> (l,r) -> Some(l,r)
         | _ -> None 
         
+    let (|Same|_|) = 
+        function
+        | (r,l) when r = l -> Some(l)
+        | _ -> None
+        
+    let (|Sin|_|) = 
+        function
+        | UnaryFn <@ Math.Sin @> arg -> Some(arg)
+        | _ -> None
+        
+    let (|Cos|_|) = 
+        function
+        | UnaryFn <@ Math.Cos @> arg -> Some(arg)
+        | _ -> None
+        
+    let (|Add|_|) =
+        function
+        | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
+        | _ -> None 
+        
+    let (|Divide|_|) =
+        function
+        | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
+        | _ -> None 
         
     let rec simplify quotation =
     
-        let (|Same|_|) = 
-            function
-            | (r,l) when r = l -> Some(l)
-            | _ -> None
-            
-        let (|Sin|_|) = 
-            function
-            | UnaryFn <@ Math.Sin @> arg -> Some(arg)
-            | _ -> None
-            
-        let (|Add|_|) =
-            function
-            | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
-            | _ -> None 
-            
-        let (|Divide|_|) =
-            function
-            | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
-            | _ -> None 
             
         let (|ConstantMultiply|_|) =
             function
@@ -63,8 +68,8 @@ module Calculus =
             | _ -> None    
             
         let Multiply3(a,b,c) = 
-            let e = simplify <@@(%%b:double) + (%%c:double) @@>
-            simplify <@@ (%%a: double) * (%%e:double) @@>
+            let e = simplify <@@(%%b:double) + %%c @@>
+            simplify <@@ (%%a: double) * %%e @@>
         
         let (|CommonFactor|_|) x =
             match x with
@@ -99,8 +104,8 @@ module Calculus =
             | (Double 0.0, v) -> v
             | (v, Double 0.0) -> v
             | (Double a, Double b) -> Expr.Value (a + b)
-            | Same l -> <@@ 2.0 * (%%l:double) @@>
-            | _ -> <@@ (%%ll:double) + (%%rr:double) @@>
+            | Same l -> <@@ 2.0 * %%l @@>
+            | _ -> <@@ (%%ll:double) + %%rr @@>
                 
                 
         | Divide (l,r) ->
@@ -113,11 +118,11 @@ module Calculus =
             | (Double 0.0, _)      -> Expr.Value 0.0
             | (Double a, Double b) -> Expr.Value (a / b)
             | (v, Double 1.0)      -> v
-            | _                    -> <@@ (%%ll:double) / (%%rr:double) @@>
+            | _                    -> <@@ (%%ll:double) / %%rr @@>
             
         | ConstantMultiply( c0, ConstantMultiply(c1, v)) ->    
             let c = Expr.Value ( c0 * c1 )
-            simplify <@@ (%%c:double) * (%%v:double) @@>    
+            simplify <@@ (%%c:double) * %%v @@>    
             
         | ConstantMultiply( 0.0, v)      -> Expr.Value 0.0
         | ConstantMultiply( 1.0, v)      -> v
@@ -128,7 +133,7 @@ module Calculus =
             Console.WriteLine("--")
             Console.WriteLine(sa)
             Console.WriteLine(sb)
-            let e = <@@ (%%sa:double) * (%%sb:double) @@>
+            let e = <@@ (%%sa:double) * %%sb @@>
             if sa = a && sb = b then
                 e
             else
@@ -138,27 +143,27 @@ module Calculus =
         | ExprShape.ShapeVar v                  -> Expr.Var v
         | ExprShape.ShapeLambda (v,expr)        -> Expr.Lambda (v, simplify expr)
         | ExprShape.ShapeCombination (o, exprs) -> ExprShape.RebuildShapeCombination (o,List.map simplify exprs)
+        
+        
     
     let rec der_impl param quotation : Expr =
    
         let (|X|_|) input = if input = param then Some(X) else None
         
-               
-         
         match quotation with
         
-        | BinaryFn <@ (*) @> (l,r) -> 
+        | Multiply (l,r) -> 
             let dl = der_impl param l
             let dr = der_impl param r
-            <@@ (%%dl:double) * (%%r:double) + (%%l:double) * (%%dr:double) @@>
+            <@@ (%%dl:double) * %%r + %%l * %%dr @@>
             
-        | UnaryFn <@ Math.Sin @> (arg) ->
+        | Sin (arg) ->
             let di = der_impl param arg
-            <@@ (%%di:double) * Math.Cos( (%%arg:double) ) @@> 
+            <@@ %%di * Math.Cos(%%arg) @@> 
 
-        | UnaryFn <@ Math.Cos @> (arg) ->
+        | Cos (arg) ->
             let di = der_impl param arg
-            <@@ - (%%di:double) * Math.Sin( (%%arg:double) ) @@> 
+            <@@ - %%di * Math.Sin(%%arg) @@> 
             
         | Double _ -> Expr.Value 0.0
             
