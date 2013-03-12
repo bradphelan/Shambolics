@@ -54,6 +54,14 @@ type ``This is a test for symbolic derivatives`` ()=
         let d = der e
         
         d |> should equalExpr <@ fun (y:double) -> - (4.0 * y) * Math.Sin(2.0 * y * y ) @>
+        
+    [<Test>] 
+    member x.``Quotient Rule`` ()=
+        
+        let e = <@ fun (y:double) -> 1.0 / y @>
+        let d = der e
+        
+        d |> should equalExpr <@ fun (y:double) ->  -1.0 / Math.Pow(y,2.0) @>
 
     [<Test>] 
     member x.``Multipy by zero should work`` ()=

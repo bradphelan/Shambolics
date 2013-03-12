@@ -39,12 +39,20 @@ module Calculus =
         | UnaryFn <@ Math.Cos @> arg -> Some(arg)
         | _ -> None
         
+    let (|Pow|_|) = function
+        | BinaryFn <@ Math.Pow @> (l,r) -> Some(l,r)
+        | _ -> None
+        
     let (|Add|_|) = function
         | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
         | _ -> None 
         
+    let (|Subtract|_|) = function
+        | BinaryFn <@ (-) @> (l,r) -> Some(l,r)
+        | _ -> None 
+        
     let (|Divide|_|) = function
-        | BinaryFn <@ (+) @> (l,r) -> Some(l,r)
+        | BinaryFn <@ (/) @> (l,r) -> Some(l,r)
         | _ -> None 
         
     let rec simplify quotation =
@@ -96,7 +104,9 @@ module Calculus =
             | (Double a, Double b) -> Expr.Value (a + b)
             | Same l -> <@@ 2.0 * %%l @@>
             | _ -> <@@ (%%ll:double) + %%rr @@>
-                
+            
+        | Subtract (l,r) ->
+            simplify <@@ %%l + -1.0 * %%r @@>
                 
         | Divide (l,r) ->
         
@@ -141,6 +151,11 @@ module Calculus =
             let dr = der_impl param r
             <@@ (%%dl:double) * %%r + %%l * %%dr @@>
             
+        | Divide (n,d) -> 
+            let dn = der_impl param n
+            let dd = der_impl param d
+            <@@ ((%%d:double) * %%dn - %%dd * %%n) / Math.Pow( %%d, 2.0)  @@>
+            
         | Sin (arg) ->
             let di = der_impl param arg
             <@@ %%di * Math.Cos(%%arg) @@> 
@@ -163,5 +178,7 @@ module Calculus =
     let rec der expr =
         match expr with
         | Lambda(param, body) ->
-            Expr.Lambda(param, (der_impl param body) |> simplify)
+            let p = (der_impl param body) 
+            Console.WriteLine p
+            Expr.Lambda(param, p |> simplify )
         | _ -> failwith "oops"
